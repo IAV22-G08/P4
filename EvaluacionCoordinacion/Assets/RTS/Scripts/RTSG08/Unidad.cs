@@ -11,7 +11,7 @@ namespace es.ucm.fdi.iav.rts.g08
 
     public class Unidad : MonoBehaviour
     {
-        public ColorEquipo _duenhoUnidad;
+        public TipoEquipo _duenhoUnidad;
         public TipoUnidad _unidad;
         public int _influencia;
         public int _rango = 0;
@@ -28,7 +28,7 @@ namespace es.ucm.fdi.iav.rts.g08
             _rango = unitCopy._rango;
         }
 
-        public ColorEquipo getUnitType()
+        public TipoEquipo getUnitType()
         {
             return _duenhoUnidad;
         }

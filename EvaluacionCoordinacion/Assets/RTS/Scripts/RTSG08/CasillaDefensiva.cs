@@ -5,7 +5,7 @@ namespace es.ucm.fdi.iav.rts.g08
 {
     public class CasillaDefensiva
     {
-        private ColorEquipo _colorEquipo;
+        private TipoEquipo _colorEquipo;
         private int influencia;
         private MapaCasilla casilla;
 

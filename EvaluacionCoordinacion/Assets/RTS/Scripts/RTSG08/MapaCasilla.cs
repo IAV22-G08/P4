@@ -6,21 +6,28 @@ namespace es.ucm.fdi.iav.rts.g08
 {
     public class MapaCasilla : MonoBehaviour
     {
-        public ColorEquipo _colorEquipo;
-        private List<Unidad> _ejercitoHarkonnen;
-        private List<Unidad> _ejercitoFremen;
-        private List<Unidad> _ejercitoGraben;
+        public TipoEquipo _colorEquipo;
+        private List<Unidad> _ejercitoHarkonnen = new List<Unidad>();
+        private List<Unidad> _ejercitoFremen = new List<Unidad>();
+        private List<Unidad> _ejercitoGraben = new List<Unidad>();
         public int _influenciaActual;
-        private int _filas;
+        public int _filas;
         private int _columnas;
-        private int _prioHarkonnen, _prioFremen, _prioGraben;
+        public int _prioHarkonnen, _prioFremen, _prioGraben;
         private int _defensaHarkonnen, _defensaFremen;
         private CasillaOfensiva _cOfensiva;
         private CasillaDefensiva _cDefensiva;
+
+        public void setMatrixPos(int x, int y) { Debug.Log(x + " " + y + "\n"); _filas = x; _columnas = y;  }
+
+        public int getFilas() { return _filas; }
+
+        public int getColumnas() { return _columnas; }
+
         void Start()
         {
             _influenciaActual = 0;
-            _colorEquipo = ColorEquipo.VACIO;
+            _colorEquipo = TipoEquipo.VACIO;
 
             CambiaColor();
 
@@ -34,19 +41,19 @@ namespace es.ucm.fdi.iav.rts.g08
             Color cl = Color.red;
             switch (_colorEquipo)
             {
-                case ColorEquipo.HARKONNEN:
+                case TipoEquipo.HARKONNEN:
                     cl = Color.yellow;
                     break;
-                case ColorEquipo.FREMEN:
+                case TipoEquipo.FREMEN:
                     cl = Color.blue;
                     break;
-                case ColorEquipo.GRABEN:
+                case TipoEquipo.GRABEN:
                     cl = Color.green;
                     break;
-                case ColorEquipo.NEUTRO:
+                case TipoEquipo.NEUTRO:
                     cl = Color.gray;
                     break;
-                case ColorEquipo.VACIO:
+                case TipoEquipo.VACIO:
                     cl = Color.white;
                     break;
                 default:
@@ -60,21 +67,21 @@ namespace es.ucm.fdi.iav.rts.g08
         {
             switch (unidad._duenhoUnidad)
             {
-                case ColorEquipo.HARKONNEN:
+                case TipoEquipo.HARKONNEN:
                     _ejercitoHarkonnen.Add(unidad);
                     if (unidad._unidad.Equals(TipoUnidad.MILITAR))
                     {
                         _prioHarkonnen += influencia;
                     }
                     break;
-                case ColorEquipo.GRABEN:
+                case TipoEquipo.GRABEN:
                     _ejercitoGraben.Add(unidad);
                     if (unidad._unidad.Equals(TipoUnidad.MILITAR))
                     {
                         _prioGraben += influencia;
                     }
                     break;
-                case ColorEquipo.FREMEN:
+                case TipoEquipo.FREMEN:
                     _ejercitoFremen.Add(unidad);
                     if (unidad._unidad.Equals(TipoUnidad.MILITAR))
                     {
@@ -87,29 +94,28 @@ namespace es.ucm.fdi.iav.rts.g08
             }
             ModificaInfluenciaAlEntrar(unidad._duenhoUnidad, unidad._unidad, influencia);
             CambiaColor();
-
         }
 
         public void UnidadSaleCasilla(Unidad unidad, int influencia)
         {
             switch (unidad._duenhoUnidad)
             {
-                case ColorEquipo.HARKONNEN:
+                case TipoEquipo.HARKONNEN:
                     _ejercitoHarkonnen.Remove(unidad);
                     if (unidad._unidad.Equals(TipoUnidad.MILITAR))
                     {
                         _prioHarkonnen -= influencia;
                     }
                     break;
-                case ColorEquipo.GRABEN:
-                    unidadesVerdes.Remove(unidad);
+                case TipoEquipo.GRABEN:
+                    _ejercitoGraben.Remove(unidad);
                     if (unidad._unidad.Equals(TipoUnidad.MILITAR))
                     {
                         _prioGraben -= influencia;
                     }
                     break;
-                case ColorEquipo.FREMEN:
-                    unidadesAzules.Remove(unidad);
+                case TipoEquipo.FREMEN:
+                    _ejercitoFremen.Remove(unidad);
                     if (unidad._unidad.Equals(TipoUnidad.MILITAR))
                     {
                         _prioFremen -= influencia;
@@ -122,7 +128,7 @@ namespace es.ucm.fdi.iav.rts.g08
             ModificaInfluenciaAlSalir(unidad._duenhoUnidad, unidad._unidad, influencia);
             CambiaColor();
         }
-        private void ModificaInfluenciaAlEntrar(ColorEquipo equipo, Unidad unidad, int influencia)
+        private void ModificaInfluenciaAlEntrar(TipoEquipo equipo, TipoUnidad unidad, int influencia)
         {
             if (_influenciaActual < 0)
             {
@@ -135,7 +141,7 @@ namespace es.ucm.fdi.iav.rts.g08
 
 
             //Si es del mismo tipo que la casilla, la casilla es neutral o está vacía
-            if (equipo.Equals(_colorEquipo) || _colorEquipo.Equals(ColorEquipo.NEUTRO) || _colorEquipo.Equals(ColorEquipo.VACIO))
+            if (equipo.Equals(_colorEquipo) || _colorEquipo.Equals(TipoEquipo.NEUTRO) || _colorEquipo.Equals(TipoEquipo.VACIO))
             {
                 //Si es una unidad militar
                 if (unidad.Equals(TipoUnidad.MILITAR))
@@ -144,17 +150,17 @@ namespace es.ucm.fdi.iav.rts.g08
                     _colorEquipo = equipo;
 
                     //Actualizamos valor de la prioridadMilitar
-                    ActualizaPrioridadCasilla(_colorEquipo);
+                    ActualizaPrioridad(_colorEquipo);
                 }
                 //Si es una unidad de defensa
                 else
                 {
-                    switch (teamType_)
+                    switch (equipo)
                     {
-                        case ColorEquipo.AMARILLO:
+                        case TipoEquipo.HARKONNEN:
                             _defensaHarkonnen += influencia;
                             break;
-                        case ColorEquipo.AZUL:
+                        case TipoEquipo.FREMEN:
                             _defensaFremen += influencia;
                             break;
 
@@ -169,22 +175,22 @@ namespace es.ucm.fdi.iav.rts.g08
                 if (unidad.Equals(TipoUnidad.MILITAR))
                 {
                     //cogemos el team con mayor influencia en la casilla
-                    _colorEquipo = GetMayorPrio();
+                    _colorEquipo = getMaxInfluencia();
 
                     //si la casilla esta vacia o es neutral la prioridad militar es cero
-                    if (_colorEquipo.Equals(ColorEquipo.VACIO) || _colorEquipo.Equals(ColorEquipo.NEUTRO))
+                    if (_colorEquipo.Equals(TipoEquipo.VACIO) || _colorEquipo.Equals(TipoEquipo.NEUTRO))
                     {
                         _influenciaActual = 0;
                     }
-                    else ActualizaPrioridadCasilla(_colorEquipo);
+                    else ActualizaPrioridad(_colorEquipo);
                 }
                 else
                     switch (equipo)
                     {
-                        case ColorEquipo.HARKONNEN:
+                        case TipoEquipo.HARKONNEN:
                             _defensaHarkonnen += influencia;
                             break;
-                        case ColorEquipo.FREMEN:
+                        case TipoEquipo.FREMEN:
                             _defensaFremen += influencia;
                             break;
 
@@ -192,7 +198,7 @@ namespace es.ucm.fdi.iav.rts.g08
             }
         }
 
-        private void ModificaInfluenciaAlSalir(ColorEquipo tipoEquipo, TipoUnidad unidad, int influencia)
+        private void ModificaInfluenciaAlSalir(TipoEquipo tipoEquipo, TipoUnidad unidad, int influencia)
         {
             if (_influenciaActual < 0)
             {
@@ -204,29 +210,29 @@ namespace es.ucm.fdi.iav.rts.g08
             if (_prioGraben < 0) _prioGraben = 0;
 
             // si salgo en una casilla de mi equipo o neutral
-            if (tipoEquipo.Equals(_colorEquipo) || _colorEquipo.Equals(ColorEquipo.NEUTRO))
+            if (tipoEquipo.Equals(_colorEquipo) || _colorEquipo.Equals(TipoEquipo.NEUTRO))
             {
                 //si es militar
                 if (unidad.Equals(TipoUnidad.MILITAR))
                 {
-                    _colorEquipo = GetMayorPrio();
+                    _colorEquipo = getMaxInfluencia();
 
-                    if (_colorEquipo.Equals(ColorEquipo.NEUTRO) || tipoEquipo.Equals(ColorEquipo.VACIO))
+                    if (_colorEquipo.Equals(TipoEquipo.NEUTRO) || tipoEquipo.Equals(TipoEquipo.VACIO))
                     {
                         _influenciaActual = 0;
                     }
                     else
                     {
-                        ActualizaPrioridadCasilla(_colorEquipo);
+                        ActualizaPrioridad(_colorEquipo);
                     }
                 }
                 else// si soy de defensa
                     switch (tipoEquipo)
                     {
-                        case ColorEquipo.HARKONNEN:
+                        case TipoEquipo.HARKONNEN:
                             _defensaHarkonnen -= influencia;
                             break;
-                        case ColorEquipo.FREMEN:
+                        case TipoEquipo.FREMEN:
                             _defensaFremen -= influencia;
                             break;
 
@@ -240,10 +246,10 @@ namespace es.ucm.fdi.iav.rts.g08
                 {
                     switch (tipoEquipo)
                     {
-                        case ColorEquipo.HARKONNEN:
+                        case TipoEquipo.HARKONNEN:
                             _defensaHarkonnen -= influencia;
                             break;
-                        case ColorEquipo.FREMEN:
+                        case TipoEquipo.FREMEN:
                             _defensaFremen -= influencia;
                             break;
 
@@ -255,9 +261,59 @@ namespace es.ucm.fdi.iav.rts.g08
         }
         public int GetInfluenciaDef()
         {
-            if (_colorEquipo.Equals(ColorEquipo.FREMEN)) return _defensaFremen;
+            if (_colorEquipo.Equals(TipoEquipo.FREMEN)) return _defensaFremen;
 
             return _defensaHarkonnen;
+        }
+
+        private void ActualizaPrioridad(TipoEquipo dominanUnit)
+        {
+            switch (dominanUnit)
+            {
+                case TipoEquipo.HARKONNEN:
+                    _influenciaActual = _prioHarkonnen;
+                    break;
+                case TipoEquipo.FREMEN:
+                    _influenciaActual = _prioFremen;
+                    break;
+                case TipoEquipo.GRABEN:
+                    _influenciaActual = _prioGraben;
+                    break;
+                case TipoEquipo.VACIO:
+                    _influenciaActual = 0;
+                    break;
+                case TipoEquipo.NEUTRO:
+                    _influenciaActual = 0;
+                    break;
+                default:
+                    _influenciaActual = 0;
+                    break;
+            }
+        }
+
+        private TipoEquipo getMaxInfluencia()
+        {
+
+            if (_prioGraben == 0 && _prioFremen == 0 && _prioHarkonnen == 0)
+            {
+                return TipoEquipo.VACIO;
+            }
+            else if (_prioHarkonnen > _prioFremen && _prioHarkonnen > _prioGraben)
+            {
+                return TipoEquipo.HARKONNEN;
+            }
+            else if (_prioFremen > _prioHarkonnen && _prioFremen > _prioGraben)
+            {
+                return TipoEquipo.FREMEN;
+            }
+            else if (_prioGraben == 0 && _prioFremen == _prioHarkonnen)
+            {
+                return TipoEquipo.NEUTRO;
+            }
+            else
+            {
+                return TipoEquipo.GRABEN;
+            }
         }
 
         // Update is called once per frame
