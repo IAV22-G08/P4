@@ -37,12 +37,13 @@ namespace es.ucm.fdi.iav.rts.g08
         private void Update()
         {
             _casillaAct = MapManager.GetInstance().GetCasillaCercana(transform);
-
             //Ha habido cambio de casilla
             if (_casillaPrev != null && _casillaAct != _casillaPrev)
             {
                 MapManager.GetInstance().ActualizaPrioridadAlSalir(_casillaPrev, this);
                 MapManager.GetInstance().ActualizaPrioridadAlEntrar(_casillaAct, this);
+                Debug.Log("update unidad");
+
             }
             //Si la prevCasilla es null, significa que estamos en la primera iteración del bucle
             else if (_casillaPrev == null) MapManager.GetInstance().ActualizaPrioridadAlEntrar(_casillaAct, this);

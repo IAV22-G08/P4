@@ -58,11 +58,11 @@ namespace es.ucm.fdi.iav.rts.g08
             filas = (int)(terrain.terrainData.size.x / grid.cellSize.x);
             columnas = (int)(terrain.terrainData.size.z / grid.cellSize.z);
 
-            Debug.Log("filas: " + filas + "   columnas: " + columnas + "\n");
+            //Debug.Log("filas: " + filas + "   columnas: " + columnas + "\n");
 
             matriz = new MapaCasilla[filas, columnas];
             Debug.Log(matriz.Length);
-            Debug.Log("A:" + matriz[1, 1]);
+            //Debug.Log("A:" + matriz[1, 1]);
             Vector3 minPos;
             minPos.x = (grid.cellSize.x / 2);
             minPos.z = (grid.cellSize.z / 2);
@@ -70,7 +70,7 @@ namespace es.ucm.fdi.iav.rts.g08
             {
                 for (int j = 0; j < columnas; j++)
                 {
-                    Debug.Log(i + " " + j + "\n"); matriz[i, j] = new MapaCasilla();
+                    /*Debug.Log(i + " " + j + "\n"); */matriz[i, j] = new MapaCasilla();
                     GameObject currCasilla = Instantiate(ejemplo, transform);
                     currCasilla.transform.localScale = grid.cellSize;
                     Vector3 pos = new Vector3(minPos.x + (i * grid.cellSize.x), 0, minPos.z + (j * grid.cellSize.z));
@@ -163,7 +163,7 @@ namespace es.ucm.fdi.iav.rts.g08
         //Devuelve la casilla en función de un transform
         public MapaCasilla GetCasillaCercana(Transform pos)
         {
-            int indX = Mathf.Abs((int)((pos.position.x - posIni.x) / grid.cellSize.x));
+            int indX = Mathf.Abs((int)((pos.position.x - posIni.x) / grid.cellSize.x) + 1);
             int indZ = Mathf.Abs((int)((pos.position.z - posIni.z) / grid.cellSize.z));
 
             return matriz[indX, indZ];

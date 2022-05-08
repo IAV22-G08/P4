@@ -43,6 +43,7 @@ GameObject:
   - component: {fileID: -9134407034941880444}
   - component: {fileID: 5196772737476562637}
   - component: {fileID: -894025346853712320}
+  - component: {fileID: 6372951817275968928}
   m_Layer: 9
   m_Name: HarkonnenBaseFacility
   m_TagString: Untagged
@@ -127,6 +128,22 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &6372951817275968928
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6276771449770074434}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9774303870640ae4d8f5771989b579d4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _duenhoUnidad: 1
+  _unidad: 1
+  _influencia: 5
+  _rango: 3
 --- !u!1 &6276771450035236625
 GameObject:
   m_ObjectHideFlags: 0
@@ -182,6 +199,8 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 0
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -206,6 +225,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_AdditionalVertexStreams: {fileID: 0}
 --- !u!208 &5194994617912497302
 NavMeshObstacle:
   m_ObjectHideFlags: 0

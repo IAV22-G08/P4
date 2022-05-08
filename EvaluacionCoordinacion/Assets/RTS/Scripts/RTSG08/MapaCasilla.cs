@@ -18,11 +18,6 @@ namespace es.ucm.fdi.iav.rts.g08
         private CasillaOfensiva _cOfensiva;
         private CasillaDefensiva _cDefensiva;
 
-        public void setMatrixPos(int x, int y) { Debug.Log(x + " " + y + "\n"); _filas = x; _columnas = y;  }
-
-        public int getFilas() { return _filas; }
-
-        public int getColumnas() { return _columnas; }
 
         void Start()
         {
@@ -36,16 +31,21 @@ namespace es.ucm.fdi.iav.rts.g08
             _cDefensiva = new CasillaDefensiva(this);
         }
 
+        public void setMatrixPos(int x, int y) { _filas = x; _columnas = y;  }
+
+        public int getFilas() { return _filas; }
+
+        public int getColumnas() { return _columnas; }
         private void CambiaColor()
         {
             Color cl = Color.red;
             switch (_colorEquipo)
             {
                 case TipoEquipo.HARKONNEN:
-                    cl = Color.yellow;
+                    cl = Color.blue;
                     break;
                 case TipoEquipo.FREMEN:
-                    cl = Color.blue;
+                    cl = Color.yellow;
                     break;
                 case TipoEquipo.GRABEN:
                     cl = Color.green;
