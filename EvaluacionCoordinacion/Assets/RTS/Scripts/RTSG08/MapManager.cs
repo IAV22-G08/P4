@@ -139,7 +139,7 @@ namespace es.ucm.fdi.iav.rts.g08
 
         private void Update()
         {
-            if (Input.GetKeyDown(KeyCode.M))
+            if (Input.GetKeyDown(KeyCode.S))
             {
                 if (visible)
                 {
@@ -153,6 +153,79 @@ namespace es.ucm.fdi.iav.rts.g08
                     for (int i = 0; i < transform.childCount; i++)
                     {
                         transform.GetChild(i).gameObject.GetComponent<Renderer>().enabled = true;
+                    }
+                }
+
+                visible = !visible;
+            }
+
+
+            if (Input.GetKeyDown(KeyCode.G))
+            {
+                if (visible)
+                {
+                    for (int i = 0; i < transform.childCount; i++)
+                    {
+                        transform.GetChild(i).gameObject.GetComponent<Renderer>().enabled = false;
+                    }
+                }
+                else
+                {
+                    for (int i = 0; i < transform.childCount; i++)
+                    {
+                        if(transform.GetChild(i).gameObject.GetComponent<MapaCasilla>()._colorEquipo == TipoEquipo.GRABEN)
+                        {
+                            transform.GetChild(i).gameObject.GetComponent<Renderer>().enabled = true;
+
+                        }
+                    }
+                }
+
+                visible = !visible;
+            }
+
+            if (Input.GetKeyDown(KeyCode.H))
+            {
+                if (visible)
+                {
+                    for (int i = 0; i < transform.childCount; i++)
+                    {
+                        transform.GetChild(i).gameObject.GetComponent<Renderer>().enabled = false;
+                    }
+                }
+                else
+                {
+                    for (int i = 0; i < transform.childCount; i++)
+                    {
+                        if (transform.GetChild(i).gameObject.GetComponent<MapaCasilla>()._colorEquipo == TipoEquipo.HARKONNEN)
+                        {
+                            transform.GetChild(i).gameObject.GetComponent<Renderer>().enabled = true;
+
+                        }
+                    }
+                }
+
+                visible = !visible;
+            }
+
+            if (Input.GetKeyDown(KeyCode.F))
+            {
+                if (visible)
+                {
+                    for (int i = 0; i < transform.childCount; i++)
+                    {
+                        transform.GetChild(i).gameObject.GetComponent<Renderer>().enabled = false;
+                    }
+                }
+                else
+                {
+                    for (int i = 0; i < transform.childCount; i++)
+                    {
+                        if (transform.GetChild(i).gameObject.GetComponent<MapaCasilla>()._colorEquipo == TipoEquipo.FREMEN)
+                        {
+                            transform.GetChild(i).gameObject.GetComponent<Renderer>().enabled = true;
+
+                        }
                     }
                 }
 

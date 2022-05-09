@@ -17,6 +17,7 @@ namespace es.ucm.fdi.iav.rts.g08
         private int _defensaHarkonnen, _defensaFremen;
         private CasillaOfensiva _cOfensiva;
         private CasillaDefensiva _cDefensiva;
+        private float scalaIni = 5f;
 
 
         void Start()
@@ -196,6 +197,9 @@ namespace es.ucm.fdi.iav.rts.g08
 
                     }
             }
+
+
+            gameObject.GetComponent<Transform>().localScale = new Vector3(5,scalaIni + _influenciaActual,5);
         }
 
         private void ModificaInfluenciaAlSalir(TipoEquipo tipoEquipo, TipoUnidad unidad, int influencia)
@@ -257,6 +261,8 @@ namespace es.ucm.fdi.iav.rts.g08
                 }
 
             }
+
+            gameObject.GetComponent<Transform>().localScale = new Vector3(5, scalaIni + _influenciaActual, 5);
 
         }
         public int GetInfluenciaDef()
