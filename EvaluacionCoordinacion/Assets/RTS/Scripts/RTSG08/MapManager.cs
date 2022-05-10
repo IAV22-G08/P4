@@ -61,7 +61,6 @@ namespace es.ucm.fdi.iav.rts.g08
             //Debug.Log("filas: " + filas + "   columnas: " + columnas + "\n");
 
             matriz = new MapaCasilla[filas, columnas];
-            Debug.Log(matriz.Length);
             //Debug.Log("A:" + matriz[1, 1]);
             Vector3 minPos;
             minPos.x = (grid.cellSize.x / 2);
