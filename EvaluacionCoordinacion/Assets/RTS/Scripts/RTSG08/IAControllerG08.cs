@@ -479,10 +479,10 @@ namespace es.ucm.fdi.iav.rts.g08
                 else
                     AtacarDoble();
             }
-            else if (peligroAtaqueEnemigo())
-            {
-                DefensaTotal();
-            }
+            //else if (peligroAtaqueEnemigo())
+            //{
+            //    DefensaTotal();
+            //}
             else
             {
                 MantenerEconomia();
