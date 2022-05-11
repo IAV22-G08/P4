@@ -60,7 +60,8 @@ namespace es.ucm.fdi.iav.rts.g08
             {
                 for (int j = 0; j < columnas; j++)
                 {
-                    /*Debug.Log(i + " " + j + "\n"); */matriz[i, j] = new MapaCasilla();
+                    /*Debug.Log(i + " " + j + "\n"); */
+                    matriz[i, j] = new MapaCasilla();
                     GameObject currCasilla = Instantiate(ejemplo, transform);
                     currCasilla.transform.localScale = grid.cellSize;
                     Vector3 pos = new Vector3(minPos.x + (i * grid.cellSize.x), 0, minPos.z + (j * grid.cellSize.z));
@@ -122,7 +123,7 @@ namespace es.ucm.fdi.iav.rts.g08
                     {
                         //comprobamos que prioridad le corresponde
                         matriz[i, j].UnidadSaleCasilla(unit_, unit_._influencia - 1);
-                       
+
                     }
                 }
             }
@@ -130,6 +131,8 @@ namespace es.ucm.fdi.iav.rts.g08
 
         private void Update()
         {
+            ActualizarColores();
+
             if (Input.GetKeyDown(KeyCode.S))
             {
                 if (visible)
@@ -151,77 +154,79 @@ namespace es.ucm.fdi.iav.rts.g08
             }
 
 
-            if (Input.GetKeyDown(KeyCode.G))
-            {
-                if (visible)
-                {
-                    for (int i = 0; i < transform.childCount; i++)
-                    {
-                        transform.GetChild(i).gameObject.GetComponent<Renderer>().enabled = false;
-                    }
-                }
-                else
-                {
-                    for (int i = 0; i < transform.childCount; i++)
-                    {
-                        if(transform.GetChild(i).gameObject.GetComponent<MapaCasilla>()._colorEquipo == TipoEquipo.GRABEN)
-                        {
-                            transform.GetChild(i).gameObject.GetComponent<Renderer>().enabled = true;
+            //if (Input.GetKeyDown(KeyCode.G))
+            //{
+            //    if (visible)
+            //    {
+            //        for (int i = 0; i < transform.childCount; i++)
+            //        {
+            //            transform.GetChild(i).gameObject.GetComponent<Renderer>().enabled = false;
+            //        }
+            //    }
+            //    else
+            //    {
+            //        for (int i = 0; i < transform.childCount; i++)
+            //        {
+            //            if(transform.GetChild(i).gameObject.GetComponent<MapaCasilla>()._colorEquipo == TipoEquipo.GRABEN)
+            //            {
+            //                transform.GetChild(i).gameObject.GetComponent<Renderer>().enabled = true;
 
-                        }
-                    }
-                }
+            //            }
+            //        }
+            //    }
 
-                visible = !visible;
-            }
+            //    visible = !visible;
+            //}
 
-            if (Input.GetKeyDown(KeyCode.H))
-            {
-                if (visible)
-                {
-                    for (int i = 0; i < transform.childCount; i++)
-                    {
-                        transform.GetChild(i).gameObject.GetComponent<Renderer>().enabled = false;
-                    }
-                }
-                else
-                {
-                    for (int i = 0; i < transform.childCount; i++)
-                    {
-                        if (transform.GetChild(i).gameObject.GetComponent<MapaCasilla>()._colorEquipo == TipoEquipo.HARKONNEN)
-                        {
-                            transform.GetChild(i).gameObject.GetComponent<Renderer>().enabled = true;
+            //if (Input.GetKeyDown(KeyCode.H))
+            //{
+            //    if (visible)
+            //    {
+            //        for (int i = 0; i < transform.childCount; i++)
+            //        {
+            //            transform.GetChild(i).gameObject.GetComponent<Renderer>().enabled = false;
+            //        }
+            //    }
+            //    else
+            //    {
+            //        for (int i = 0; i < transform.childCount; i++)
+            //        {
+            //            if (transform.GetChild(i).gameObject.GetComponent<MapaCasilla>()._colorEquipo == TipoEquipo.HARKONNEN)
+            //            {
+            //                transform.GetChild(i).gameObject.GetComponent<Renderer>().enabled = true;
+            //            }
+            //            else
+            //                transform.GetChild(i).gameObject.GetComponent<Renderer>().enabled = false;
 
-                        }
-                    }
-                }
+            //        }
+            //    }
 
-                visible = !visible;
-            }
+            //    visible = !visible;
+            //}
 
-            if (Input.GetKeyDown(KeyCode.F))
-            {
-                if (visible)
-                {
-                    for (int i = 0; i < transform.childCount; i++)
-                    {
-                        transform.GetChild(i).gameObject.GetComponent<Renderer>().enabled = false;
-                    }
-                }
-                else
-                {
-                    for (int i = 0; i < transform.childCount; i++)
-                    {
-                        if (transform.GetChild(i).gameObject.GetComponent<MapaCasilla>()._colorEquipo == TipoEquipo.FREMEN)
-                        {
-                            transform.GetChild(i).gameObject.GetComponent<Renderer>().enabled = true;
+            //if (Input.GetKeyDown(KeyCode.F))
+            //{
+            //    if (visible)
+            //    {
+            //        for (int i = 0; i < transform.childCount; i++)
+            //        {
+            //            transform.GetChild(i).gameObject.GetComponent<Renderer>().enabled = false;
+            //        }
+            //    }
+            //    else
+            //    {
+            //        for (int i = 0; i < transform.childCount; i++)
+            //        {
+            //            if (transform.GetChild(i).gameObject.GetComponent<MapaCasilla>()._colorEquipo == TipoEquipo.FREMEN)
+            //            {
+            //                transform.GetChild(i).gameObject.GetComponent<Renderer>().enabled = true;
 
-                        }
-                    }
-                }
+            //            }
+            //        }
+            //    }
 
-                visible = !visible;
-            }
+            //    visible = !visible;
+            //}
         }
 
         //Devuelve la casilla en función de un transform
@@ -258,9 +263,98 @@ namespace es.ucm.fdi.iav.rts.g08
             }
         }
 
-        public void ActualizarMapaInfluencia()
+        public void ActualizarColores()
         {
-
+            Color cl;
+            if (Input.GetKey(KeyCode.H))
+            {
+                //Bucle todas las tropas
+                for (int i = 0; i < transform.childCount; i++)
+                {
+                    if (transform.GetChild(i).gameObject.GetComponent<MapaCasilla>()._colorEquipo == TipoEquipo.HARKONNEN)//Mantiene Color
+                    {
+                        cl = Color.blue;
+                        cl.a = 0.2f;
+                        transform.GetChild(i).gameObject.GetComponent<MeshRenderer>().material.color = cl;
+                    }
+                    else //Pierde Color
+                    {
+                        cl = Color.gray;
+                        cl.a = 0.2f;
+                        transform.GetChild(i).gameObject.GetComponent<MeshRenderer>().material.color = cl;
+                    }
+                }
+            }
+            else if (Input.GetKey(KeyCode.F))
+            {
+                //Bucle todas las tropas
+                for (int i = 0; i < transform.childCount; i++)
+                {
+                    if (transform.GetChild(i).gameObject.GetComponent<MapaCasilla>()._colorEquipo == TipoEquipo.FREMEN)//Mantiene Color
+                    {
+                        cl = Color.yellow;
+                        cl.a = 0.2f;
+                        transform.GetChild(i).gameObject.GetComponent<MeshRenderer>().material.color = cl;
+                    }
+                    else //Pierde Color
+                    {
+                        cl = Color.gray;
+                        cl.a = 0.2f;
+                        transform.GetChild(i).gameObject.GetComponent<MeshRenderer>().material.color = cl;
+                    }
+                }
+            }
+            else if (Input.GetKey(KeyCode.G))
+            {
+                //Bucle todas las tropas
+                for (int i = 0; i < transform.childCount; i++)
+                {
+                    if (transform.GetChild(i).gameObject.GetComponent<MapaCasilla>()._colorEquipo == TipoEquipo.GRABEN)//Mantiene Color
+                    {
+                        cl = Color.green;
+                        cl.a = 0.2f;
+                        transform.GetChild(i).gameObject.GetComponent<MeshRenderer>().material.color = cl;
+                    }
+                    else //Pierde Color
+                    {
+                        cl = Color.gray;
+                        cl.a = 0.2f;
+                        transform.GetChild(i).gameObject.GetComponent<MeshRenderer>().material.color = cl;
+                    }
+                }
+            }
+            else
+            {
+                //Ver todos los colores
+                //Bucle todas las tropas
+                for (int i = 0; i < transform.childCount; i++)
+                {
+                    if (transform.GetChild(i).gameObject.GetComponent<MapaCasilla>()._colorEquipo == TipoEquipo.GRABEN)//Mantiene Color
+                    {
+                        cl = Color.green;
+                        cl.a = 0.2f;
+                        transform.GetChild(i).gameObject.GetComponent<MeshRenderer>().material.color = cl;
+                    }
+                    else if (transform.GetChild(i).gameObject.GetComponent<MapaCasilla>()._colorEquipo == TipoEquipo.FREMEN) //Pierde Color
+                    {
+                        cl = Color.yellow;
+                        cl.a = 0.2f;
+                        transform.GetChild(i).gameObject.GetComponent<MeshRenderer>().material.color = cl;
+                    }
+                    else if (transform.GetChild(i).gameObject.GetComponent<MapaCasilla>()._colorEquipo == TipoEquipo.HARKONNEN)
+                    {
+                        cl = Color.blue;
+                        cl.a = 0.2f;
+                        transform.GetChild(i).gameObject.GetComponent<MeshRenderer>().material.color = cl;
+                    }
+                    else
+                    {
+                        cl = Color.gray;
+                        cl.a = 0.2f;
+                        transform.GetChild(i).gameObject.GetComponent<MeshRenderer>().material.color = cl;
+                    }
+                }
+            }
         }
     }
 };
