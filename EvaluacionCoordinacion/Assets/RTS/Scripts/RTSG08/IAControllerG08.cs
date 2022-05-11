@@ -15,6 +15,16 @@ using System.Collections.Generic;
 
 namespace es.ucm.fdi.iav.rts.g08
 {
+
+
+    public struct SiendoAtacado
+    {
+        public bool allybase;
+        public Unit enemigoAtacandoBase;
+        public bool extractor;
+        public Unit enemigoAtacandoExtr;
+        
+    }
     public class Extractor : Unit
     {
         ExtractionUnit extractor;
@@ -50,8 +60,12 @@ namespace es.ucm.fdi.iav.rts.g08
         ECONOMIA,
         DEFENSA,
         DEFENSADOBLE,
+        DEFENSAEXTRACTOR,
         ATAQUE,
         ATAQUEDOBLE,
+        ATAQUEEXTRACTOR,
+        INCURSION,
+        CONTRAINCURSION,
         NONE
         ////  Farming consiste en priorizar la compra de extractores y con las unidades militares que se tenga defender estos extractores
         //Farming,
@@ -75,6 +89,7 @@ namespace es.ucm.fdi.iav.rts.g08
         private int MyIndex { get; set; }
         private int enemyIndex { get; set; }
         private Estrategia estrategiaPrev;
+        private Estrategia estrategiaActual;
 
 
         private List<LimitedAccess> _resources;
@@ -101,6 +116,14 @@ namespace es.ucm.fdi.iav.rts.g08
         private int minDestroyersToDefend = 2;
         private int ataquesFallidos = 0;
 
+
+        private GUIStyle _labelStyle;
+        private GUIStyle _labelSmallStyle;
+
+
+
+        private float radioLlegada = 3;
+
         // Número de paso de pensamiento 
         private int ThinkStepNumber { get; set; } = 0;
 
@@ -112,8 +135,44 @@ namespace es.ucm.fdi.iav.rts.g08
         {
             Name = "IAV22G08";
             Author = "G08";
+            Equipo equipo = GetComponent<Equipo>();
+            Color color = (equipo.miEquipo() == TipoEquipo.HARKONNEN) ? Color.blue : Color.yellow;
+
+
+            _labelStyle = new GUIStyle();
+            _labelStyle.fontSize = 16;
+            _labelStyle.normal.textColor = color;
+
+            _labelSmallStyle = new GUIStyle();
+            _labelSmallStyle.fontSize = 11;
+            _labelSmallStyle.normal.textColor = color;
         }
 
+        private void OnGUI()
+        {
+            // Abrimos un área de distribución arriba y a la izquierda (si el índice del controlador es par) o a la derecha (si el índice es impar), con contenido en vertical
+            float areaWidth = 150;
+            float areaHeight = 250;
+            if (MyIndex % 2 == 0)
+                GUILayout.BeginArea(new Rect(0, 0, areaWidth, areaHeight));
+            else
+                GUILayout.BeginArea(new Rect(Screen.width - areaWidth, 0, Screen.width, areaHeight));
+            GUILayout.BeginVertical();
+
+            // Lista las variables importantes como el índice del jugador y su cantidad de dinero
+            GUILayout.Label("[ C" + MyIndex + " ] " + RTSGameManager.Instance.GetMoney(MyIndex) + " solaris", _labelStyle);
+
+            //// Aunque no exista el concepto de unidad seleccionada, podríamos mostrar cual ha sido la última en moverse
+            //if (movedUnit != null)
+            // Una etiqueta para indicar la última unidad movida, si la hay
+            GUILayout.Label("Usando la estrategía \n" + estrategiaActual.ToString(), _labelSmallStyle);
+
+
+
+            // Cerramos el área de distribución con contenido en vertical
+            GUILayout.EndVertical();
+            GUILayout.EndArea();
+        }
         // El método de pensar que sobreescribe e implementa el controlador, para percibir (hacer mapas de influencia, etc.) y luego actuar.
         protected override void Think()
         {
@@ -131,7 +190,7 @@ namespace es.ucm.fdi.iav.rts.g08
                 case 0: // El primer contacto, un paso especial
                     InitIA();
                     //Debug.Log("Extractores init: " + _allyExtractors.Count);
-                    int rand = Random.Range(1, 4);
+                    int rand = Random.Range(1, 100);
                     Debug.Log("Random: " + rand);
                     if (rand == 1)
                     {
@@ -331,23 +390,54 @@ namespace es.ucm.fdi.iav.rts.g08
             int myMoney = RTSGameManager.Instance.GetMoney(MyIndex);
             Unit unidadCreada;
 
-            if (myMoney >= RTSGameManager.Instance.DestructionUnitCost && _allyDestroyers.Count < RTSGameManager.Instance.DestructionUnitsMax)
+            if (myMoney >= RTSGameManager.Instance.DestructionUnitCost && _allyDestroyers.Count < RTSGameManager.Instance.DestructionUnitsMax && _allyDestroyers.Count <= _allyExplorers.Count  / 2)
             {
                 unidadCreada = RTSGameManager.Instance.CreateUnit(this, _allyBase[0], RTSGameManager.UnitType.DESTRUCTION).GetComponent<DestructionUnit>();
                 //Debug.Log("Crea Destructor: " + _allyDestroyers.Count);
-                RTSGameManager.Instance.MoveUnit(this, unidadCreada, _enemyExtractores[Random.Range(0, _enemyExtractores.Count - 1)].transform);
+                int defenderMalange = Random.Range(0, 2);
+                if (defenderMalange == 0)
+                        DefendMelange(unidadCreada);
 
             }
-            else if (myMoney < RTSGameManager.Instance.DestructionUnitCost && emergencia || _allyDestroyers.Count == RTSGameManager.Instance.DestructionUnitsMax)
+            else if (myMoney < RTSGameManager.Instance.DestructionUnitCost && emergencia || _allyDestroyers.Count == RTSGameManager.Instance.DestructionUnitsMax || _allyDestroyers.Count > _allyExplorers.Count / 2)
             {
                 if (myMoney >= RTSGameManager.Instance.ExplorationUnitCost && _allyExplorers.Count < RTSGameManager.Instance.ExplorationUnitsMax)
                 {
                     unidadCreada = RTSGameManager.Instance.CreateUnit(this, _allyBase[0], RTSGameManager.UnitType.EXPLORATION).GetComponent<ExplorationUnit>();
                     Debug.Log("Crea Explorer: " + _allyExplorers.Count);
-                    RTSGameManager.Instance.MoveUnit(this, unidadCreada, _enemyExtractores[Random.Range(0, _enemyExtractores.Count - 1)].transform);
+                    
+                    int defenderMalange = Random.Range(0, 2);
+                    if(defenderMalange == 0)
+                        DefendMelange(unidadCreada);
                 }
             }
               
+           
+        }
+
+
+        private void DefendMelange(Unit unidad)
+        {
+            LimitedAccess actMelange = null;
+            float distance = 150;
+            List<int> melangesDisponiblesADefender = new List<int>();
+            for (int x = 0; x < _resources.Count; x++ )
+            {
+                float melangeDistance = (unidad.transform.position - _resources[x].transform.position).magnitude;
+                if (melangeDistance < distance)
+                {
+                    melangesDisponiblesADefender.Add(x);
+                }
+            }
+            if(melangesDisponiblesADefender.Count > 0)
+            {
+                int melangeADefender = Random.Range(0, melangesDisponiblesADefender.Count);
+                Vector3 dirBaseEnemiga = _enemyBase[0].transform.position - _resources[melangesDisponiblesADefender[melangeADefender]].transform.position;
+                dirBaseEnemiga.Normalize();
+                Vector3 posicionADefender = _resources[melangesDisponiblesADefender[melangeADefender]].transform.position + dirBaseEnemiga * 10;
+               
+                RTSGameManager.Instance.MoveUnit(this, unidad, posicionADefender);
+            }
            
         }
         private int calcularFuerzaAliada()
@@ -360,40 +450,55 @@ namespace es.ucm.fdi.iav.rts.g08
         }
 
 
-        private bool peligroAtaqueEnemigo()//Cualquier tipo de ataque
+        private SiendoAtacado peligroAtaqueEnemigo()//Cualquier tipo de ataque
         {
 
-            bool ataqueInminente = false;
+            SiendoAtacado ataqueInminente;
+            ataqueInminente.allybase = false;
+            ataqueInminente.extractor = false;
+            ataqueInminente.enemigoAtacandoBase = null;
+            ataqueInminente.enemigoAtacandoExtr = null;
+            GetUpdatedLists();
 
             foreach (DestructionUnit desUnit in _enemyDetroyers)
             {
                 foreach (Extractor extUn in _allyExtractors)
                 {
-                    if (Vector3.Distance(desUnit.transform.position, extUn.transform.position) < 30)
+                    if (Vector3.Distance(desUnit.transform.position, extUn.getExtractor().transform.position) < 30)
                     {
-                        ataqueInminente = true;
+                        ataqueInminente.extractor = true;
+                        ataqueInminente.enemigoAtacandoExtr = desUnit;
 
                     }
                 }
 
 
                 if (Vector3.Distance(desUnit.transform.position, _allyBase[0].transform.position) < 30)
-                    ataqueInminente = true;
+                {
+                    ataqueInminente.allybase = true;
+                    ataqueInminente.enemigoAtacandoBase = desUnit;
+                }
             }
 
             foreach (ExplorationUnit expUnit in _enemyExplorers)
             {
                 foreach(Extractor extUn in _allyExtractors)
                 {
-                    if (Vector3.Distance(expUnit.transform.position,extUn.transform.position) < 30)
+                    if (Vector3.Distance(expUnit.transform.position,extUn.getExtractor().transform.position) < 30)
                     {
-                        ataqueInminente = true;
+                        ataqueInminente.extractor = true;
+                        ataqueInminente.enemigoAtacandoExtr = expUnit;
 
                     }
                 }
 
                 if (Vector3.Distance(expUnit.transform.position, _allyBase[0].transform.position) < 45)
-                    ataqueInminente = true;
+                {
+                    ataqueInminente.allybase = true;
+                    ataqueInminente.enemigoAtacandoBase = expUnit;
+                }
+                    
+
             }
 
             return ataqueInminente;
@@ -469,29 +574,61 @@ namespace es.ucm.fdi.iav.rts.g08
 
             //Calcalar distancia de la fuerza enemiga
 
-
+            SiendoAtacado siendoAtacado = peligroAtaqueEnemigo();
             //si la fuerza aliada es un 33% mayor atacar, si no potenciar economía
-            if(fuerzaMilitarAliada/fuerzaMilitarEnemiga > 2)
+            if (siendoAtacado.allybase && !siendoAtacado.extractor)
+            {
+                DefensaTotal(siendoAtacado.enemigoAtacandoBase);
+                estrategiaPrev = Estrategia.DEFENSA;
+
+            }
+            else if (fuerzaMilitarAliada/fuerzaMilitarEnemiga > 1.5)
             {
 
                 if (ataquesFallidos < 2)
+                {
                     AtacarConTodo();
+                    estrategiaPrev = Estrategia.ATAQUE;
+                }
                 else
+                {
                     AtacarDoble();
+                    estrategiaPrev = Estrategia.ATAQUEDOBLE;
+                }
             }
-            //else if (peligroAtaqueEnemigo())
-            //{
-            //    DefensaTotal();
-            //}
+            else if(estrategiaPrev == Estrategia.DEFENSAEXTRACTOR && _allyExtractors.Count < _enemyExtractores.Count)
+            {
+                ContraIncursion();
+            }
+            else if(siendoAtacado.allybase && siendoAtacado.extractor)
+            {
+                DefensaDoble(siendoAtacado.enemigoAtacandoExtr, siendoAtacado.enemigoAtacandoBase);
+                estrategiaPrev = Estrategia.DEFENSADOBLE;
+
+            }
+            else if (siendoAtacado.extractor)
+            {
+                DefensaExtractor(siendoAtacado.enemigoAtacandoExtr);
+                estrategiaPrev = Estrategia.DEFENSAEXTRACTOR;
+
+            }
+            else if (_allyExplorers.Count >= 4)
+            {
+                AtacarIncursion();
+            }
             else
             {
                 MantenerEconomia();
+                estrategiaPrev = Estrategia.ECONOMIA;
+
             }
         }
 
 
         private void AtacarConTodo()
         {
+            estrategiaActual = Estrategia.ATAQUE;
+
             if (estrategiaPrev == Estrategia.ATAQUE)
                 return;
 
@@ -500,11 +637,13 @@ namespace es.ucm.fdi.iav.rts.g08
            
             foreach (DestructionUnit desUnit in _allyDestroyers)
             {
-                RTSGameManager.Instance.MoveUnit(this, desUnit, destino);
+                if (Vector3.Distance(desUnit.transform.position, destino.position) > radioLlegada)
+                    RTSGameManager.Instance.MoveUnit(this, desUnit, destino);
             }
             foreach (ExplorationUnit explUnit in _allyExplorers)
             {
-                RTSGameManager.Instance.MoveUnit(this, explUnit, destino);
+                if (Vector3.Distance(explUnit.transform.position, destino.position) > radioLlegada)
+                    RTSGameManager.Instance.MoveUnit(this, explUnit, destino);
             }
 
             estrategiaPrev = Estrategia.ATAQUE;
@@ -513,28 +652,139 @@ namespace es.ucm.fdi.iav.rts.g08
 
         private void AtacarDoble()
         {
+            estrategiaActual = Estrategia.ATAQUEDOBLE;
 
             Debug.Log("ESTRATEGIA: AtacarConTodo");
             Transform destino = _enemyBase[0].transform; ;
 
             foreach (DestructionUnit desUnit in _allyDestroyers)
             {
-                RTSGameManager.Instance.MoveUnit(this, desUnit, destino);
+                if (Vector3.Distance(desUnit.transform.position, destino.position) > radioLlegada)
+                    RTSGameManager.Instance.MoveUnit(this, desUnit, destino);
             }
 
 
             destino = _enemyExtractores[Random.Range(0, _enemyExtractores.Count - 1)].transform;
             foreach (ExplorationUnit explUnit in _allyExplorers)
             {
-                RTSGameManager.Instance.MoveUnit(this, explUnit, destino);
+                if (Vector3.Distance(explUnit.transform.position, destino.position) > radioLlegada)
+                    RTSGameManager.Instance.MoveUnit(this, explUnit, destino);
             }
 
             estrategiaPrev = Estrategia.ATAQUE;
         }
 
 
-        private void DefensaTotal()
+        private void AtacarIncursion()
         {
+            estrategiaActual = Estrategia.INCURSION;
+            if (estrategiaPrev == Estrategia.INCURSION)
+                return;
+
+            Debug.Log("ESTRATEGIA: AtacarConTodo");
+            Transform destino = _enemyBase[0].transform; ;
+
+           
+
+
+            destino = _enemyExtractores[Random.Range(0, _enemyExtractores.Count - 1)].transform;
+            for (int x = 0; x < _allyExplorers.Count / 2; x++)
+            {
+                RTSGameManager.Instance.MoveUnit(this, _allyExplorers[x], destino);
+            }
+
+            estrategiaPrev = Estrategia.INCURSION;
+        }
+
+
+        private void ContraIncursion()
+        {
+            estrategiaActual = Estrategia.CONTRAINCURSION;
+            if (estrategiaPrev == Estrategia.CONTRAINCURSION)
+                return;
+
+            Debug.Log("ESTRATEGIA: AtacarConTodo");
+            Transform destino = _enemyBase[0].transform; ;
+
+
+
+
+            destino = _enemyExtractores[Random.Range(0, _enemyExtractores.Count - 1)].transform;
+            for (int x = 0; x < _allyExplorers.Count; x++)
+            {
+                RTSGameManager.Instance.MoveUnit(this, _allyExplorers[x], destino);
+            }
+            
+            for (int x = 0; x < _allyDestroyers.Count / 2; x++)
+            {
+                RTSGameManager.Instance.MoveUnit(this, _allyDestroyers[x], destino);
+            }
+
+            estrategiaPrev = Estrategia.INCURSION;
+        }
+        private void DefensaTotal(Unit enemigoAtacandoBase)
+        {
+            estrategiaActual = Estrategia.DEFENSA;
+
+            if (estrategiaPrev == Estrategia.DEFENSA)
+                return;
+
+            Debug.Log("ESTRATEGIA: Defensa");
+            Transform destino = _allyBase[0].GetComponent<BaseFacility>().SpawnTransform; ;
+
+            CrearMilitar(true);
+
+            foreach (DestructionUnit desUnit in _allyDestroyers)
+            {
+                if (Vector3.Distance(desUnit.transform.position, destino.position) > radioLlegada)
+                    RTSGameManager.Instance.MoveUnit(this, desUnit, enemigoAtacandoBase.transform);
+            }
+            foreach (ExplorationUnit explUnit in _allyExplorers)
+            {
+                if (Vector3.Distance(explUnit.transform.position, destino.position) > radioLlegada)
+                    RTSGameManager.Instance.MoveUnit(this, explUnit, enemigoAtacandoBase.transform);
+            }
+        }
+
+        private void DefensaExtractor(Unit enemigoAtacandoExtractor)
+        {
+            estrategiaActual = Estrategia.DEFENSAEXTRACTOR;
+
+            if (estrategiaPrev == Estrategia.DEFENSAEXTRACTOR)
+                return;
+
+            Debug.Log("ESTRATEGIA: DefensaExtractor");
+            Transform destino = _allyBase[0].GetComponent<BaseFacility>().SpawnTransform; ;
+
+            CrearMilitar(true);
+
+           
+
+            foreach (ExplorationUnit explUnit in _allyExplorers)
+            {
+                if (Vector3.Distance(explUnit.transform.position, enemigoAtacandoExtractor.transform.position) > radioLlegada)
+                    RTSGameManager.Instance.MoveUnit(this, explUnit, enemigoAtacandoExtractor.transform);
+            }
+
+            if(_allyExplorers.Count == 0)
+            {
+                for(int x = 0; x < _allyDestroyers.Count / 2; x++)
+                {
+                    if (Vector3.Distance(_allyDestroyers[x].transform.position, enemigoAtacandoExtractor.transform.position) > radioLlegada)
+                        RTSGameManager.Instance.MoveUnit(this, _allyDestroyers[x], enemigoAtacandoExtractor.transform);
+                }
+              
+            }
+        }
+        private void DefensaDoble(Unit enemigoAtacandoExt, Unit enemigoAtacandoBase)
+        {
+            estrategiaActual = Estrategia.DEFENSA;
+
+            if(estrategiaPrev == estrategiaActual)
+            {
+                return;
+            }
+
             Debug.Log("ESTRATEGIA: Defensa");
             Transform destino = _allyBase[0].transform; ;
 
@@ -542,11 +792,13 @@ namespace es.ucm.fdi.iav.rts.g08
 
             foreach (DestructionUnit desUnit in _allyDestroyers)
             {
-                RTSGameManager.Instance.MoveUnit(this, desUnit, destino);
+                if (Vector3.Distance(desUnit.transform.position, destino.position) > radioLlegada)
+                    RTSGameManager.Instance.MoveUnit(this, desUnit, enemigoAtacandoBase.transform);
             }
             foreach (ExplorationUnit explUnit in _allyExplorers)
             {
-                RTSGameManager.Instance.MoveUnit(this, explUnit, destino);
+                if (Vector3.Distance(explUnit.transform.position, destino.position) > radioLlegada)
+                    RTSGameManager.Instance.MoveUnit(this, explUnit,enemigoAtacandoExt.transform);
             }
         }
 
@@ -554,7 +806,9 @@ namespace es.ucm.fdi.iav.rts.g08
         private void MantenerEconomia()
         {
             Debug.Log("ESTRATEGIA: manternerEconomia");
-            if(estrategiaPrev == Estrategia.ATAQUE)
+            estrategiaActual = Estrategia.ECONOMIA;
+
+            if (estrategiaPrev == Estrategia.ATAQUE)
             {
                 ataquesFallidos++;
             }
@@ -573,7 +827,6 @@ namespace es.ucm.fdi.iav.rts.g08
             else if(_allyDestroyers.Count < _allyExtractors.Count || _allyExtractors.Count == RTSGameManager.Instance.ExtractionUnitsMax)
             {
                 CrearMilitar(false);
-
             }
 
 
