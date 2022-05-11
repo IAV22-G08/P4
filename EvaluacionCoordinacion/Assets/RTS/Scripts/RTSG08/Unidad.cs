@@ -16,9 +16,7 @@ namespace es.ucm.fdi.iav.rts.g08
         public int _influencia;
         public int _rango = 0;
 
-        //Referencia a la casilla en la que nos encontrabamos en la iteracion actual
         private MapaCasilla _casillaAct;
-        //Referencia a la casilla en la que nos encontramos en la iteracion anterior
         private MapaCasilla _casillaPrev;
         public Unidad(Unidad unitCopy)
         {
@@ -33,11 +31,10 @@ namespace es.ucm.fdi.iav.rts.g08
             return _duenhoUnidad;
         }
 
-        //Gestión del movimiento de las unidades para actualizar el mapa de influencia
         private void Update()
         {
+            //Controlar si entran o salen de las casillas para catualizar el mapa de influencia
             _casillaAct = MapManager.GetInstance().GetCasillaCercana(transform);
-            //Ha habido cambio de casilla
             if (_casillaPrev != null && _casillaAct != _casillaPrev)
             {
                 MapManager.GetInstance().ActualizaPrioridadAlSalir(_casillaPrev, this);
@@ -45,7 +42,6 @@ namespace es.ucm.fdi.iav.rts.g08
                 Debug.Log("update unidad");
 
             }
-            //Si la prevCasilla es null, significa que estamos en la primera iteración del bucle
             else if (_casillaPrev == null) MapManager.GetInstance().ActualizaPrioridadAlEntrar(_casillaAct, this);
 
             _casillaPrev = _casillaAct;
@@ -56,7 +52,6 @@ namespace es.ucm.fdi.iav.rts.g08
         {
             if (_casillaPrev)
             {
-                //Cuando se destruye esta entidad hay que quitar los valores de influencia de la misma en el mapa
                 MapManager.GetInstance().ActualizaPrioridadAlSalir(_casillaPrev, this);
             }
         }

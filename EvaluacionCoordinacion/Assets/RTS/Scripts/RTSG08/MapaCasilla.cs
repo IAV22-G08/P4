@@ -15,8 +15,6 @@ namespace es.ucm.fdi.iav.rts.g08
         private int _columnas;
         public int _prioHarkonnen, _prioFremen, _prioGraben;
         private int _defensaHarkonnen, _defensaFremen;
-        private CasillaOfensiva _cOfensiva;
-        private CasillaDefensiva _cDefensiva;
         private float scalaIni = 5f;
 
 
@@ -26,10 +24,6 @@ namespace es.ucm.fdi.iav.rts.g08
             _colorEquipo = TipoEquipo.VACIO;
 
             CambiaColor();
-
-            //Casillas ofensivas y defensivas
-            _cOfensiva = new CasillaOfensiva(this);
-            _cDefensiva = new CasillaDefensiva(this);
         }
 
         public void setMatrixPos(int x, int y) { _filas = x; _columnas = y;  }
@@ -141,16 +135,12 @@ namespace es.ucm.fdi.iav.rts.g08
             if (_prioGraben < 0) _prioGraben = 0;
 
 
-            //Si es del mismo tipo que la casilla, la casilla es neutral o está vacía
             if (equipo.Equals(_colorEquipo) || _colorEquipo.Equals(TipoEquipo.NEUTRO) || _colorEquipo.Equals(TipoEquipo.VACIO))
             {
-                //Si es una unidad militar
                 if (unidad.Equals(TipoUnidad.MILITAR))
                 {
-                    //La casilla es del equipo de la unidad entrante
                     _colorEquipo = equipo;
 
-                    //Actualizamos valor de la prioridadMilitar
                     ActualizaPrioridad(_colorEquipo);
                 }
                 //Si es una unidad de defensa
@@ -169,16 +159,12 @@ namespace es.ucm.fdi.iav.rts.g08
                 }
 
             }
-            //Si no es del mismo equipo
             else if (!equipo.Equals(_colorEquipo))
             {
-                //es una unidad Militar
                 if (unidad.Equals(TipoUnidad.MILITAR))
                 {
-                    //cogemos el team con mayor influencia en la casilla
                     _colorEquipo = getMaxInfluencia();
 
-                    //si la casilla esta vacia o es neutral la prioridad militar es cero
                     if (_colorEquipo.Equals(TipoEquipo.VACIO) || _colorEquipo.Equals(TipoEquipo.NEUTRO))
                     {
                         _influenciaActual = 0;
@@ -213,10 +199,8 @@ namespace es.ucm.fdi.iav.rts.g08
             if (_prioFremen < 0) _prioFremen = 0;
             if (_prioGraben < 0) _prioGraben = 0;
 
-            // si salgo en una casilla de mi equipo o neutral
             if (tipoEquipo.Equals(_colorEquipo) || _colorEquipo.Equals(TipoEquipo.NEUTRO))
             {
-                //si es militar
                 if (unidad.Equals(TipoUnidad.MILITAR))
                 {
                     _colorEquipo = getMaxInfluencia();
@@ -230,7 +214,7 @@ namespace es.ucm.fdi.iav.rts.g08
                         ActualizaPrioridad(_colorEquipo);
                     }
                 }
-                else// si soy de defensa
+                else
                     switch (tipoEquipo)
                     {
                         case TipoEquipo.HARKONNEN:
@@ -242,10 +226,8 @@ namespace es.ucm.fdi.iav.rts.g08
 
                     }
             }
-            //si salgo de una casilla que no es de mi equipo
             else if (!tipoEquipo.Equals(_colorEquipo))
             {
-                //si soy de defensa
                 if (!unidad.Equals(TipoUnidad.MILITAR))
                 {
                     switch (tipoEquipo)
@@ -322,11 +304,7 @@ namespace es.ucm.fdi.iav.rts.g08
             }
         }
 
-        // Update is called once per frame
-        void Update()
-        {
-
-        }
+        
     }
 }
 

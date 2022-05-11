@@ -1,22 +1,10 @@
-/*    
-   Copyright (C) 2020 Federico Peinado
-   http://www.federicopeinado.com
-
-   Este fichero forma parte del material de la asignatura Inteligencia Artificial para Videojuegos.
-   Esta asignatura se imparte en la Facultad de Informática de la Universidad Complutense de Madrid (España).
-
-   Autores originales: Opsive (Behavior Designer Samples)
-   Revisión: Federico Peinado 
-   Contacto: email@federicopeinado.com
-*/
-
 using UnityEngine;
 using System.Collections.Generic;
 
 namespace es.ucm.fdi.iav.rts.g08
 {
 
-
+    //para saber dónde está siendo atacaado y por quién
     public struct SiendoAtacado
     {
         public bool allybase;
@@ -25,6 +13,8 @@ namespace es.ucm.fdi.iav.rts.g08
         public Unit enemigoAtacandoExtr;
         
     }
+
+    //para controlar las acciones del extractor
     public class Extractor : Unit
     {
         ExtractionUnit extractor;
@@ -56,7 +46,6 @@ namespace es.ucm.fdi.iav.rts.g08
 
     public enum Estrategia
     {
-
         ECONOMIA,
         DEFENSA,
         DEFENSADOBLE,
@@ -67,76 +56,66 @@ namespace es.ucm.fdi.iav.rts.g08
         INCURSION,
         CONTRAINCURSION,
         NONE
-        ////  Farming consiste en priorizar la compra de extractores y con las unidades militares que se tenga defender estos extractores
-        //Farming,
-        ////  Defensivo consiste en jugar de forma defensiva ante los ataque enemigos, colocando unidades defendiendo estructuras 
-        //Defensivo,
-        ////  Ofensivo consiste en jugar de forma agresiva, atacando directamente a la base enemiga y a las zonas con mayor influencias del enemigo
-        //Ofensivo,
-        ////  Guerrilla consiste en ataques de pocas unidades a estructuras, extractores o anidades enemigas y luego reagruparse.
-        //Guerrilla,
-        ////  Entra en estado de emergencia cuando quedan pocas unidades ofensivas
-        //Emergencia,
-        ////  
-        //NONE
     }
 
 
     // El controlador táctico que proporciono de ejemplo... simplemente manda órdenes RANDOM, y no hace ninguna interpretación (localizar puntos de ruta bien, análisis táctico, acción coordinada...) 
     public class IAControllerG08 : RTSAIController
     {
-        // No necesita guardar mucha información porque puede consultar la que desee por sondeo, incluida toda la información de instalaciones y unidades, tanto propias como ajenas
+        
         private int MyIndex { get; set; }
         private int enemyIndex { get; set; }
         private Estrategia estrategiaPrev;
         private Estrategia estrategiaActual;
 
-
+        //dónde se encuentran las minas para llevar extractores
         private List<LimitedAccess> _resources;
         private List<Tower> Torretas;
         
 
         private TipoEquipo _ownTeam;
         private TipoEquipo _enemyTeam;
-        // Mis listas completas de instalaciones y unidades
+       
+        //Aqúí las listas para guardar las entidades del juego, la base y la Factory por si en una partida se quieren poner varios
         private List<BaseFacility> _allyBase;
         private List<ProcessingFacility> _allyFactory;
         private List<Extractor> _allyExtractors;
         private List<ExplorationUnit> _allyExplorers;
         private List<DestructionUnit> _allyDestroyers;
 
-        // Las listas completas de instalaciones y unidades del enemigo
+        //Las de los enemigos
         private List<BaseFacility> _enemyBase;
         private List<ProcessingFacility> _enemyFactory;
         private List<ExtractionUnit> _enemyExtractores;
         private List<ExplorationUnit> _enemyExplorers;
         private List<DestructionUnit> _enemyDetroyers;
+       
         bool estrategiaRush = false;
 
-        private int minDestroyersToDefend = 2;
+        
         private int ataquesFallidos = 0;
 
 
+        //Para el HUD
         private GUIStyle _labelStyle;
         private GUIStyle _labelSmallStyle;
+        private GUIStyle _labelSmallUnits;
 
 
-
+        //Para saber cuando ha llegado a un destino una unidad (mediante el método move)
         private float radioLlegada = 3;
 
         // Número de paso de pensamiento 
         private int ThinkStepNumber { get; set; } = 0;
 
-        // Última unidad creada
-        private Unit LastUnit { get; set; }
 
-        // Despierta el controlado y configura toda estructura interna que sea necesaria
+        //Despierto al controlador de la IA y 
         private void Awake()
         {
             Name = "IAV22G08";
             Author = "G08";
             Equipo equipo = GetComponent<Equipo>();
-            Color color = (equipo.miEquipo() == TipoEquipo.HARKONNEN) ? Color.blue : Color.yellow;
+            Color color = (equipo.miEquipo() == TipoEquipo.HARKONNEN) ? Color.cyan : Color.yellow;
 
 
             _labelStyle = new GUIStyle();
@@ -146,11 +125,16 @@ namespace es.ucm.fdi.iav.rts.g08
             _labelSmallStyle = new GUIStyle();
             _labelSmallStyle.fontSize = 11;
             _labelSmallStyle.normal.textColor = color;
+
+
+            _labelSmallUnits = new GUIStyle();
+            _labelSmallUnits.fontSize = 11;
+            _labelSmallUnits.normal.textColor = color;
         }
 
         private void OnGUI()
         {
-            // Abrimos un área de distribución arriba y a la izquierda (si el índice del controlador es par) o a la derecha (si el índice es impar), con contenido en vertical
+            //Para las métricas el HUD
             float areaWidth = 150;
             float areaHeight = 250;
             if (MyIndex % 2 == 0)
@@ -159,49 +143,46 @@ namespace es.ucm.fdi.iav.rts.g08
                 GUILayout.BeginArea(new Rect(Screen.width - areaWidth, 0, Screen.width, areaHeight));
             GUILayout.BeginVertical();
 
-            // Lista las variables importantes como el índice del jugador y su cantidad de dinero
+            //La información relevante como el dinero, la estrategia o las tropas
             GUILayout.Label("[ C" + MyIndex + " ] " + RTSGameManager.Instance.GetMoney(MyIndex) + " solaris", _labelStyle);
 
-            //// Aunque no exista el concepto de unidad seleccionada, podríamos mostrar cual ha sido la última en moverse
-            //if (movedUnit != null)
-            // Una etiqueta para indicar la última unidad movida, si la hay
+            
             GUILayout.Label("Usando la estrategía \n" + estrategiaActual.ToString(), _labelSmallStyle);
 
+            GUILayout.Label("\n\n\nTropas: \n" 
+                + "Exploradores: " + _allyExplorers.Count.ToString() + 
+                "\nDestructores: " + _allyDestroyers.Count.ToString() + 
+                "\nExtractores: " + _allyExtractors.Count.ToString(), _labelSmallUnits);
 
 
-            // Cerramos el área de distribución con contenido en vertical
+
             GUILayout.EndVertical();
             GUILayout.EndArea();
         }
-        // El método de pensar que sobreescribe e implementa el controlador, para percibir (hacer mapas de influencia, etc.) y luego actuar.
+        
         protected override void Think()
         {
-            // Actualizo el mapa de influencia 
-            // ...
-
-            // Para las órdenes aquí estoy asumiendo que tengo dinero de sobra y que se dan las condiciones de todas las cosas...
-            // (Ojo: esto no debería hacerse porque si me equivoco, causaré fallos en el juego... hay que comprobar que cada llamada tiene sentido y es posible hacerla)
-
-            // Aquí lo suyo sería elegir bien la acción a realizar. 
-            // En este caso como es para probar, voy dando a cada vez una orden de cada tipo, todo de seguido y muy aleatorio...
-            //Debug.Log("Think");
+           
+            //Hay 3 pasos marcados, el primero para iniciar la IA, el segundo para elegir si realizar una estrategia inicial especial y el tercero en el que se queda en bucle
             switch (ThinkStepNumber)
             {
-                case 0: // El primer contacto, un paso especial
+                case 0: 
                     InitIA();
-                    //Debug.Log("Extractores init: " + _allyExtractors.Count);
-                    int rand = Random.Range(1, 100);
+                    //Hay una probabiliad baja de que haga un ataque relámpago al inicio
+                    int rand = Random.Range(1, 15);
                     Debug.Log("Random: " + rand);
                     if (rand == 1)
                     {
                         Debug.Log("SalióRush");
                         estrategiaRush = true;
                     }
+                    else
+                    {
+                        InicioDefault();
+                    }
                     break;
 
                 case 1:
-                    //Debug.Log("Step1");
-                    //MantenerEconomía();
                     Debug.Log("EstrategiaRush: " + estrategiaRush);
                     if (estrategiaRush)
                         InicioRush();
@@ -213,56 +194,15 @@ namespace es.ucm.fdi.iav.rts.g08
                     AnalizarYSeleccionarEstrategia();
                     break;
 
-                //case 3:
-                //    LastUnit = RTSGameManager.Instance.CreateUnit(this, MyBaseFacility, RTSGameManager.UnitType.DESTRUCTION);
-                //    break;
-
-                //case 4:
-                //    RTSGameManager.Instance.MoveUnit(this, LastUnit, OtherBaseFacility.transform);
-                //    break;
-
-                //case 5:
-                //    LastUnit = RTSGameManager.Instance.CreateUnit(this, MyBaseFacility, RTSGameManager.UnitType.EXTRACTION);
-                //    break;
-
-                //case 6:
-                //    RTSGameManager.Instance.MoveUnit(this, LastUnit, OtherBaseFacility.transform);
-                //    break;
-
-                //case 7:
-                //    RTSGameManager.Instance.MoveUnit(this, LastUnit, MyProcessingFacility.transform);
-                //    break;
-
-                //case 8:
-                //    LastUnit = RTSGameManager.Instance.CreateUnit(this, MyBaseFacility, RTSGameManager.UnitType.EXPLORATION);
-                //    break;
-
-                //case 9:
-                //    RTSGameManager.Instance.MoveUnit(this, LastUnit, OtherBaseFacility.transform);
-                //    break;
-
-                //case 10:
-                //    LastUnit = RTSGameManager.Instance.CreateUnit(this, MyBaseFacility, RTSGameManager.UnitType.EXPLORATION);
-                //    break;
-
-                //case 11:
-                //    RTSGameManager.Instance.MoveUnit(this, LastUnit, MyProcessingFacility.transform);
-                //    // No lo hago... pero también se podrían crear y mover varias unidades en el mismo momento, claro...
-                //    break;
-
-                //case 12:
-                //    Stop = true;
-                //    break;
+                
             }
-            //Debug.Log("Controlador automático " + MyIndex + " ha finalizado el paso de pensamiento " + ThinkStepNumber);
-            //ThinkStepNumber++;            //ThinkStepNumber++;
+           
         }
 
         private void InitIA()
         {
 
-            //audioSource = MapManager.GetInstance().gameObject.GetComponent<AudioSource>();
-            // Coger indice asignado por el gestor del juego
+            
             MyIndex = RTSGameManager.Instance.GetIndex(this);
             _ownTeam = RTSGameManager.Instance.GetBaseFacilities(MyIndex)[0].GetComponent<Unidad>().getUnitType();
 
@@ -275,48 +215,32 @@ namespace es.ucm.fdi.iav.rts.g08
                 _enemyTeam = TipoEquipo.FREMEN;
             }
 
-            // Obtengo referencias a las cosas de mi enemigo cogiendo la lista de indices
-            //correspondientes a cada jugador
+            //Obtener referencias a sí misma y a la enemiga
+
             var indexList = RTSGameManager.Instance.GetIndexes();
-            //Quito mi indice de esa lista
             indexList.Remove(MyIndex);
-            //Asumo que el primer indice es el de mi enemigo
             enemyIndex = indexList[0];
 
-            // Obtengo lista de accesos limitados
             _resources = RTSScenarioManager.Instance.LimitedAccesses;
 
             _allyExtractors = new List<Extractor>();
 
-            //Inicializamos a parte la lista de los extractores para gestionar mejor su movimiento porque
-            //si no, cuando hay varios que van a la misma casilla para extraer recursos se suelen quedar
-            //"pillados"
+            //Actualziar todas las listas con las que llevamos las entidades y objetos
             GetUpdatedLists();
 
-            //Envíamos a los estractores que ya tenemos en juego a su objetivo de extraer recursos
-            //teniendo en cuenta lo previamente mentado.
+            //Enviar extractores a los puntos cercanos
             gestionaExtractores();
 
             estrategiaPrev = Estrategia.NONE;
 
-            //if ((RTSGameManager.Instance.GetMoney(MyIndex) <= 0
-            //    && MiFactoria.Count <= 0
-            //    && MisExtractores.Count <= 0
-            //    && MisExploradores.Count <= 0
-            //    && MisDestructores.Count <= 0)
-            //    || MiBase.Count <= 0)
-            //{
-            //    throw new Exception("No hay condiciones suficientes para jugar");
-            //}
-            //Pasamos a AIGameLoop()
             ThinkStepNumber++;
 
-            //audioSource.clip = getRdy;
-            //audioSource.Play();
+           
         }
 
         private void GetUpdatedLists()
         {
+
             _allyBase = RTSGameManager.Instance.GetBaseFacilities(MyIndex);
             _allyFactory = RTSGameManager.Instance.GetProcessingFacilities(MyIndex);
 
@@ -330,7 +254,6 @@ namespace es.ucm.fdi.iav.rts.g08
             _allyExplorers = RTSGameManager.Instance.GetExplorationUnits(MyIndex);
 
             _allyDestroyers = RTSGameManager.Instance.GetDestructionUnits(MyIndex);
-            //MisExtractores = RTSGameManager.Instance.GetExtractionUnits(MyIndex);
 
             _enemyBase = RTSGameManager.Instance.GetBaseFacilities(enemyIndex);
             _enemyFactory = RTSGameManager.Instance.GetProcessingFacilities(enemyIndex);
@@ -345,6 +268,7 @@ namespace es.ucm.fdi.iav.rts.g08
         #region extractores
         private LimitedAccess getMelangeToFarm(Vector3 initPos)
         {
+            //Hay que mirar si esán ocupadas para poder ir a ellas
             LimitedAccess actMelange = null;
             float distance = 100000;
             foreach (LimitedAccess melange in _resources)
@@ -356,9 +280,9 @@ namespace es.ucm.fdi.iav.rts.g08
                     distance = melangeDistance;
                 }
             }
-            //actMelange.GetComponent<Renderer>().material.color = Color.cyan;
             return actMelange;
         }
+
         private void gestionaExtractores()
         {
             foreach (Extractor extractor in _allyExtractors)
@@ -387,13 +311,16 @@ namespace es.ucm.fdi.iav.rts.g08
         #region MetodosAuxiliares
         private void CrearMilitar(bool emergencia)
         {
+            //Crea unidades siguiendo un orden y unas proporciones
             int myMoney = RTSGameManager.Instance.GetMoney(MyIndex);
             Unit unidadCreada;
+
+            //Intenta crear exploradores y destructores con un ratio 2:1 
+            //Si es una emergencia y no tiene dinero para un destructor saca explorador ya que necesita urgente tropas
 
             if (myMoney >= RTSGameManager.Instance.DestructionUnitCost && _allyDestroyers.Count < RTSGameManager.Instance.DestructionUnitsMax && _allyDestroyers.Count <= _allyExplorers.Count  / 2)
             {
                 unidadCreada = RTSGameManager.Instance.CreateUnit(this, _allyBase[0], RTSGameManager.UnitType.DESTRUCTION).GetComponent<DestructionUnit>();
-                //Debug.Log("Crea Destructor: " + _allyDestroyers.Count);
                 int defenderMalange = Random.Range(0, 2);
                 if (defenderMalange == 0)
                         DefendMelange(unidadCreada);
@@ -404,8 +331,6 @@ namespace es.ucm.fdi.iav.rts.g08
                 if (myMoney >= RTSGameManager.Instance.ExplorationUnitCost && _allyExplorers.Count < RTSGameManager.Instance.ExplorationUnitsMax)
                 {
                     unidadCreada = RTSGameManager.Instance.CreateUnit(this, _allyBase[0], RTSGameManager.UnitType.EXPLORATION).GetComponent<ExplorationUnit>();
-                    Debug.Log("Crea Explorer: " + _allyExplorers.Count);
-                    
                     int defenderMalange = Random.Range(0, 2);
                     if(defenderMalange == 0)
                         DefendMelange(unidadCreada);
@@ -418,6 +343,9 @@ namespace es.ucm.fdi.iav.rts.g08
 
         private void DefendMelange(Unit unidad)
         {
+
+            //Lleva a unidad a una melange cercana para que esté segura para los extraactores
+            //Se posiciona en el lado de la base enemiga para protegerlo mejor y no molestar al extractor
             LimitedAccess actMelange = null;
             float distance = 150;
             List<int> melangesDisponiblesADefender = new List<int>();
@@ -440,6 +368,8 @@ namespace es.ucm.fdi.iav.rts.g08
             }
            
         }
+
+        //Cálculo de portencia militar
         private int calcularFuerzaAliada()
         {
             return _allyExplorers.Count * 1 + _allyDestroyers.Count * 3;
@@ -450,9 +380,9 @@ namespace es.ucm.fdi.iav.rts.g08
         }
 
 
-        private SiendoAtacado peligroAtaqueEnemigo()//Cualquier tipo de ataque
+        private SiendoAtacado peligroAtaqueEnemigo()
         {
-
+            //Mirar si están atacando la base y los exploradores
             SiendoAtacado ataqueInminente;
             ataqueInminente.allybase = false;
             ataqueInminente.extractor = false;
@@ -531,6 +461,7 @@ namespace es.ucm.fdi.iav.rts.g08
 
         private void InicioRush()
         {
+            //crea tropas y ataca rápido
             int myMoney = RTSGameManager.Instance.GetMoney(MyIndex);
 
 
@@ -575,13 +506,13 @@ namespace es.ucm.fdi.iav.rts.g08
             //Calcalar distancia de la fuerza enemiga
 
             SiendoAtacado siendoAtacado = peligroAtaqueEnemigo();
-            //si la fuerza aliada es un 33% mayor atacar, si no potenciar economía
             if (siendoAtacado.allybase && !siendoAtacado.extractor)
             {
                 DefensaTotal(siendoAtacado.enemigoAtacandoBase);
                 estrategiaPrev = Estrategia.DEFENSA;
 
             }
+            //si la fuerza aliada es un 50% mayor atacar, si no potenciar economía
             else if (fuerzaMilitarAliada/fuerzaMilitarEnemiga > 1.5)
             {
 
@@ -598,6 +529,7 @@ namespace es.ucm.fdi.iav.rts.g08
             }
             else if(estrategiaPrev == Estrategia.DEFENSAEXTRACTOR && _allyExtractors.Count < _enemyExtractores.Count)
             {
+                //Si va por detrás en economía hace un esfuerzo militar desesperado para mermar la economía enemiga
                 ContraIncursion();
             }
             else if(siendoAtacado.allybase && siendoAtacado.extractor)
@@ -615,6 +547,8 @@ namespace es.ucm.fdi.iav.rts.g08
             else if (_allyExplorers.Count >= 4)
             {
                 AtacarIncursion();
+                estrategiaPrev = Estrategia.INCURSION;
+
             }
             else
             {
@@ -632,7 +566,8 @@ namespace es.ucm.fdi.iav.rts.g08
             if (estrategiaPrev == Estrategia.ATAQUE)
                 return;
 
-            Debug.Log("ESTRATEGIA: AtacarConTodo");
+
+            //Ataca con TODO a la base principal
             Transform destino = _enemyBase[0].transform; ;
            
             foreach (DestructionUnit desUnit in _allyDestroyers)
@@ -656,6 +591,8 @@ namespace es.ucm.fdi.iav.rts.g08
 
             Debug.Log("ESTRATEGIA: AtacarConTodo");
             Transform destino = _enemyBase[0].transform; ;
+
+            //Ataca con destructores a la base enemiga y expoloradores a los extractores
 
             foreach (DestructionUnit desUnit in _allyDestroyers)
             {
@@ -686,7 +623,7 @@ namespace es.ucm.fdi.iav.rts.g08
 
            
 
-
+            //Con los exploradores disponibles ataca a un extractor enemigo
             destino = _enemyExtractores[Random.Range(0, _enemyExtractores.Count - 1)].transform;
             for (int x = 0; x < _allyExplorers.Count / 2; x++)
             {
@@ -708,7 +645,7 @@ namespace es.ucm.fdi.iav.rts.g08
 
 
 
-
+            //Ataca con la mayoria de tropas para mermar economía
             destino = _enemyExtractores[Random.Range(0, _enemyExtractores.Count - 1)].transform;
             for (int x = 0; x < _allyExplorers.Count; x++)
             {
@@ -722,6 +659,8 @@ namespace es.ucm.fdi.iav.rts.g08
 
             estrategiaPrev = Estrategia.INCURSION;
         }
+
+
         private void DefensaTotal(Unit enemigoAtacandoBase)
         {
             estrategiaActual = Estrategia.DEFENSA;
@@ -729,9 +668,12 @@ namespace es.ucm.fdi.iav.rts.g08
             if (estrategiaPrev == Estrategia.DEFENSA)
                 return;
 
+            //El grueso de las tropas enemigas se concentra alrededor de la base aliada y se defiende con todo
+
             Debug.Log("ESTRATEGIA: Defensa");
             Transform destino = _allyBase[0].GetComponent<BaseFacility>().SpawnTransform; ;
 
+            //Crea tropas para manterner la defensa
             CrearMilitar(true);
 
             foreach (DestructionUnit desUnit in _allyDestroyers)
@@ -752,10 +694,10 @@ namespace es.ucm.fdi.iav.rts.g08
 
             if (estrategiaPrev == Estrategia.DEFENSAEXTRACTOR)
                 return;
-
-            Debug.Log("ESTRATEGIA: DefensaExtractor");
+            //Los enemigos solo están atacando un extractor
             Transform destino = _allyBase[0].GetComponent<BaseFacility>().SpawnTransform; ;
 
+            //Crea tropas para manterner la defensa
             CrearMilitar(true);
 
            
@@ -766,6 +708,7 @@ namespace es.ucm.fdi.iav.rts.g08
                     RTSGameManager.Instance.MoveUnit(this, explUnit, enemigoAtacandoExtractor.transform);
             }
 
+            //si no hay exploradores para defender se lleva a la mitad de los destructores
             if(_allyExplorers.Count == 0)
             {
                 for(int x = 0; x < _allyDestroyers.Count / 2; x++)
@@ -776,6 +719,8 @@ namespace es.ucm.fdi.iav.rts.g08
               
             }
         }
+
+
         private void DefensaDoble(Unit enemigoAtacandoExt, Unit enemigoAtacandoBase)
         {
             estrategiaActual = Estrategia.DEFENSA;
@@ -785,9 +730,10 @@ namespace es.ucm.fdi.iav.rts.g08
                 return;
             }
 
-            Debug.Log("ESTRATEGIA: Defensa");
             Transform destino = _allyBase[0].transform; ;
 
+
+            //Crea tropas para manterner la defensa
             CrearMilitar(true);
 
             foreach (DestructionUnit desUnit in _allyDestroyers)
@@ -822,7 +768,6 @@ namespace es.ucm.fdi.iav.rts.g08
                 Extractor actExtractor = new Extractor(RTSGameManager.Instance.CreateUnit(this, _allyBase[0], RTSGameManager.UnitType.EXTRACTION).GetComponent<ExtractionUnit>());
                 _allyExtractors.Add(actExtractor);
                 RTSGameManager.Instance.MoveUnit(this, actExtractor.getExtractor(), getMelangeToFarm(_allyFactory[0].transform.position).transform.position);
-                //Debug.Log("Crea Extractor: " + _allyExtractors.Count);
             }
             else if(_allyDestroyers.Count < _allyExtractors.Count || _allyExtractors.Count == RTSGameManager.Instance.ExtractionUnitsMax)
             {

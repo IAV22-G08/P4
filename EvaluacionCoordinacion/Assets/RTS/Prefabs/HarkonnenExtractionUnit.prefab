@@ -370,7 +370,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _duenhoUnidad: 1
-  _unidad: 1
+  _unidad: 0
   _influencia: 1
   _rango: 1
 --- !u!1 &5314750715479662723

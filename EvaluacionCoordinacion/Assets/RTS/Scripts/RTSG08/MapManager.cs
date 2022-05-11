@@ -6,19 +6,12 @@ namespace es.ucm.fdi.iav.rts.g08
 {
     public class MapManager : MonoBehaviour
     {
-        //  Número de filas de este escenario
         private int filas;
-        //  Número de columnas de este escenario
         private int columnas;
-        //  Grid del escenario
         private Grid grid;
-        //  Matriz de casillas
         private MapaCasilla[,] matriz;
-        //  instancia estática de mapManager
         private static MapManager instance_;
-        //  Para ocultar el mapa
         private bool visible = false;
-        //  Terrain del escenario
         private Terrain terrain;
 
         Vector3 posIni;
@@ -26,7 +19,6 @@ namespace es.ucm.fdi.iav.rts.g08
         private MapaCasilla MaxprioAzul;
         private MapaCasilla MaxprioAmarillo;
 
-        //  GameObject usado para instanciar el mapa
         [Tooltip("Prefab de las casillas")]
         public GameObject ejemplo;
 
@@ -58,7 +50,6 @@ namespace es.ucm.fdi.iav.rts.g08
             filas = (int)(terrain.terrainData.size.x / grid.cellSize.x);
             columnas = (int)(terrain.terrainData.size.z / grid.cellSize.z);
 
-            //Debug.Log("filas: " + filas + "   columnas: " + columnas + "\n");
 
             matriz = new MapaCasilla[filas, columnas];
             //Debug.Log("A:" + matriz[1, 1]);
@@ -131,6 +122,7 @@ namespace es.ucm.fdi.iav.rts.g08
                     {
                         //comprobamos que prioridad le corresponde
                         matriz[i, j].UnidadSaleCasilla(unit_, unit_._influencia - 1);
+                       
                     }
                 }
             }
